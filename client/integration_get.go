@@ -27,14 +27,14 @@ const (
 )
 
 type Integration struct {
-	Created        time.Time         `json:"created"`
-	Data           IntegrationData   `json:"data"`
-	Description    string            `json:"description"`
-	Id             string            `json:"id"`
-	OrganizationId string            `json:"organizationId"`
-	ProjectId      string            `json:"projectId"`
-	Status         IntegrationStatus `json:"status"`
-	Updated        time.Time         `json:"updated"`
+	Created        time.Time              `json:"created"`
+	Data           map[string]interface{} `json:"data"`
+	Description    string                 `json:"description"`
+	Id             string                 `json:"id"`
+	OrganizationId string                 `json:"organizationId"`
+	ProjectId      string                 `json:"projectId"`
+	Status         IntegrationStatus      `json:"status"`
+	Updated        time.Time              `json:"updated"`
 }
 
 type ListIntegrationsResponse struct {

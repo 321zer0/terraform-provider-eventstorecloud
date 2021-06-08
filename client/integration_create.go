@@ -15,8 +15,8 @@ type CreateIntegrationData struct {
 }
 
 type CreateIntegrationRequest struct {
-	Data        CreateIntegrationData `json:"data"`
-	Description string                `json:"description"`
+	Data        map[string]interface{} `json:"data"`
+	Description string                 `json:"description"`
 }
 
 type CreateIntegrationResponse struct {
