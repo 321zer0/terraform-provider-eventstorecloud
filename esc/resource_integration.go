@@ -19,12 +19,13 @@ func resourceIntegration() *schema.Resource {
 		Exists: resourceIntegrationExists,
 		Read:   resourceIntegrationRead,
 		Delete: resourceIntegrationDelete,
+		Update: resourceIntegrationUpdate,
 
 		Schema: map[string]*schema.Schema{
 			"description": {
 				Description: "Human readable description of the integration",
 				Required:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Type:        schema.TypeString,
 			},
 			"project_id": {
@@ -36,29 +37,46 @@ func resourceIntegration() *schema.Resource {
 			"data": {
 				Description: "Data for the integration",
 				Required:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Type:        schema.TypeMap,
 			},
 		},
 	}
 }
 
-func swapMapNames(names []struct{ from, to string }, data map[string]interface{}) map[string]interface{} {
-	for _, e := range names {
-		if value, ok := data[e.from]; ok {
-			data[e.to] = value
-			delete(data, e.from)
+type ModifyMapArgs struct {
+	RenameNames []struct{ from, to string }
+	RemoveNames []string
+}
+
+func modifyMap(args ModifyMapArgs, data map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	for k, v := range data {
+		result[k] = v
+	}
+
+	for _, e := range args.RenameNames {
+		if value, ok := result[e.from]; ok {
+			result[e.to] = value
+			delete(result, e.from)
 		}
 	}
-	return data
+	for _, name := range args.RemoveNames {
+		if _, ok := result[name]; ok {
+			delete(result, name)
+		}
+	}
+	return result
 }
 
 func translateTfDataToApi(data map[string]interface{}) map[string]interface{} {
-	values := []struct{ from, to string }{
-		{from: "api_key", to: "apiKey"},
-		{from: "channel_id", to: "channelId"},
-	}
-	return swapMapNames(values, data)
+	return modifyMap(ModifyMapArgs{
+		RenameNames: []struct{ from, to string }{
+			{from: "api_key", to: "apiKey"},
+			{from: "channel_id", to: "channelId"},
+		},
+		RemoveNames: []string{},
+	}, data)
 }
 
 func translateApiDataToTf(data map[string]interface{}) map[string]interface{} {
@@ -67,16 +85,22 @@ func translateApiDataToTf(data map[string]interface{}) map[string]interface{} {
 	// Allowing them to be different here violates terraform's constructs and
 	// makes them impossible to retrieve individually, although oddly enough
 	// you can see them if you set the entire "data" map to an output variable.
-	values := []struct{ from, to string }{
-		{from: "apiKeyDisplay", to: "api_key"},
-		{from: "channelId", to: "channel_id"},
-		{from: "tokenDisplay", to: "token"},
-	}
-	return swapMapNames(values, data)
+
+	return modifyMap(ModifyMapArgs{
+		RenameNames: []struct{ from, to string }{
+			{from: "channelId", to: "channel_id"},
+		},
+		RemoveNames: []string{
+			"apiKeyDisplay",
+			"tokenDisplay",
+		},
+	}, data)
 }
 
 func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Println("[BESPIN] in the hood creating up good!")
+
+	log.Printf("[BESPIN-q] resourceIntegrationCreate data=%q\n", d.Get("data"))
 
 	c := meta.(*providerContext)
 
@@ -107,6 +131,7 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceIntegrationExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	c := meta.(*providerContext)
 
+	log.Printf("[BESPIN-q] resourceIntegrationExists data=%q\n", d.Get("data"))
 	projectId := d.Get("project_id").(string)
 	integrationId := d.Id()
 
@@ -123,6 +148,9 @@ func resourceIntegrationExists(d *schema.ResourceData, meta interface{}) (bool, 
 
 func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(*providerContext)
+
+	log.Printf("[BESPIN-q] resourceIntegrationRead data=%q\n", d.Get("data"))
+
 	projectId := d.Get("project_id").(string)
 	integrationId := d.Id()
 
@@ -148,6 +176,8 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(*providerContext)
 
+	log.Printf("[BESPIN-q] resourceIntegrationDelete data=%q\n", d.Get("data"))
+
 	projectId := d.Get("project_id").(string)
 	integrationId := d.Id()
 
@@ -170,4 +200,55 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 		time.Sleep(1.0)
 	}
+}
+
+func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
+	c := meta.(*providerContext)
+
+	log.Printf("[BESPIN-q] resourceIntegrationUpdate data=%q\n", d.Get("data"))
+	log.Println("[BESPIN-z] hiiii")
+
+	if !d.HasChanges("description", "data") {
+		log.Println("[BESPIN-z] nopeys!")
+		return nil
+	}
+
+	var desc *string
+	if !d.HasChange("description") {
+		log.Printf("[BESPIN-z] ooh I'm digging that new DESCRIPTION!! :%q\n", d.Get("description"))
+		newDesc := d.Get("description").(string)
+		desc = &newDesc
+	} else {
+		desc = nil
+	}
+
+	var data *map[string]interface{}
+	if d.HasChange("data") {
+		switch v := d.Get("data").(type) {
+		case nil:
+			data = nil
+		case map[string]interface{}:
+			newData := translateTfDataToApi(v)
+			log.Println("[BESPIN-z] ooh I'm digging that new DATA!!!!!!")
+			data = &newData
+		default:
+			log.Println("[BESPIN-z] what is DATA?!!!")
+		}
+	} else {
+		data = nil
+	}
+
+	request := client.UpdateIntegrationRequest{
+		Data:        data,
+		Description: desc,
+	}
+
+	orgId := c.organizationId
+	log.Printf("[BESPIN-z] getting project...%q\n", d.Get("project_id"))
+	projectId := d.Get("project_id").(string)
+	log.Printf("[BESPIN-z] getting id...%q\n", d.Id())
+	integrationId := d.Id()
+
+	log.Println("[BESPIN-z] calling UPDATE INTEGTIUEWDF")
+	return c.client.UpdateIntegration(context.Background(), orgId, projectId, integrationId, request)
 }
