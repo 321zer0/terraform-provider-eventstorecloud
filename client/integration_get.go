@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -64,12 +65,12 @@ type SlackIntegrationData struct {
 func (c *Client) GetIntegration(ctx context.Context, organizationId string, projectId string, integrationId string) (*GetIntegrationResponse, error) {
 
 	url := *c.apiURL
-	url.Path = "/organizations/{organizationId}/projects/{projectId}/integrations/{integrationId}"
+	url.Path = "/integrate/v1/organizations/{organizationId}/projects/{projectId}/integrations/{integrationId}"
 	url.Path = strings.Replace(url.Path, "{"+"organizationId"+"}", organizationId, -1)
 	url.Path = strings.Replace(url.Path, "{"+"projectId"+"}", projectId, -1)
 	url.Path = strings.Replace(url.Path, "{"+"integrationId"+"}", integrationId, -1)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("error constructing request for GetIntegration: %w", err)
 	}
@@ -78,6 +79,8 @@ func (c *Client) GetIntegration(ctx context.Context, organizationId string, proj
 		return nil, err
 	}
 
+	log.Printf("[BESPIN-C] 1 url=%q\n", url.Path)
+
 	resp, err := c.httpClient.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request for GetIntegration: %w", err)
@@ -85,6 +88,7 @@ func (c *Client) GetIntegration(ctx context.Context, organizationId string, proj
 	defer closeIgnoreError(resp.Body)
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		log.Printf("[BESPIN-C] 2 resp.StatusCode=%d\n", resp.StatusCode)
 		return nil, translateStatusCode(resp.StatusCode, "GetIntegration", resp.Body)
 	}
 

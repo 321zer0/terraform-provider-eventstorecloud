@@ -52,6 +52,7 @@ func Provider() terraform.ResourceProvider {
 			"eventstorecloud_peering":          resourcePeering(),
 			"eventstorecloud_managed_cluster":  resourceManagedCluster(),
 			"eventstorecloud_scheduled_backup": resourceScheduledBackup(),
+			"eventstorecloud_integration":      resourceIntegration(),
 		},
 
 		ConfigureFunc: providerConfigure,

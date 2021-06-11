@@ -38,7 +38,7 @@ func (c *Client) UpdateIntegration(ctx context.Context, organizationId string, p
 	}
 
 	url := *c.apiURL
-	url.Path = "/organizations/{organizationId}/projects/{projectId}/integrations/{integrationId}"
+	url.Path = "/integrate/v1/organizations/{organizationId}/projects/{projectId}/integrations/{integrationId}"
 	url.Path = strings.Replace(url.Path, "{"+"organizationId"+"}", organizationId, -1)
 	url.Path = strings.Replace(url.Path, "{"+"projectId"+"}", projectId, -1)
 	url.Path = strings.Replace(url.Path, "{"+"integrationId"+"}", integrationId, -1)

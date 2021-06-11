@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -44,36 +45,45 @@ type CreateSlackIntegrationData struct {
 func (c *Client) CreateIntegration(ctx context.Context, organizationId string, projectId string, createIntegrationRequest CreateIntegrationRequest) (*CreateIntegrationResponse, error) {
 	requestBody, err := json.Marshal(createIntegrationRequest)
 	if err != nil {
+		log.Println("[BESPIN-B] 1")
 		return nil, fmt.Errorf("error marshalling request: %w", err)
 	}
 
 	url := *c.apiURL
-	url.Path = "/organizations/{organizationId}/projects/{projectId}/integrations"
+	url.Path = "/integrate/v1/organizations/{organizationId}/projects/{projectId}/integrations"
 	url.Path = strings.Replace(url.Path, "{"+"organizationId"+"}", organizationId, -1)
 	url.Path = strings.Replace(url.Path, "{"+"projectId"+"}", projectId, -1)
 
+	log.Printf("[BESPIN-B] 1 url=%q\n", url.Path)
+	log.Printf("[BESPIN-B] 1 data=%q\n", createIntegrationRequest.Data)
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, url.String(), bytes.NewReader(requestBody))
 	if err != nil {
+		log.Println("[BESPIN-B] 2")
 		return nil, fmt.Errorf("error constructing request for CreateIntegration: %w", err)
 	}
 	request.Header.Add("Content-Type", "application/json")
 	if err := c.addAuthorizationHeader(request); err != nil {
+		log.Println("[BESPIN-B] 3")
 		return nil, err
 	}
 
 	resp, err := c.httpClient.Do(request)
 	if err != nil {
+		log.Println("[BESPIN-B] 4")
 		return nil, fmt.Errorf("error sending request for CreateIntegration: %w", err)
 	}
 	defer closeIgnoreError(resp.Body)
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		log.Println("[BESPIN-B] 5")
+		log.Printf("[BESPIN-B] statusCode=%d\n", resp.StatusCode)
 		return nil, translateStatusCode(resp.StatusCode, "CreateIntegration", resp.Body)
 	}
 
 	decoder := json.NewDecoder(resp.Body)
 	result := CreateIntegrationResponse{}
 	if err := decoder.Decode(&result); err != nil {
+		log.Println("[BESPIN-B] 6")
 		return nil, fmt.Errorf("error parsing response: %w", err)
 	}
 
