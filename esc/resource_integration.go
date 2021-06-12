@@ -214,12 +214,11 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var desc *string
-	if !d.HasChange("description") {
-		log.Printf("[BESPIN-z] ooh I'm digging that new DESCRIPTION!! :%q\n", d.Get("description"))
-		newDesc := d.Get("description").(string)
+	desc = nil
+	log.Printf("[BESPIN-z] ooh I'm digging that new DESCRIPTION!! :%q\n", d.Get("description"))
+	newDesc := d.Get("description").(string)
+	if newDesc != "" {
 		desc = &newDesc
-	} else {
-		desc = nil
 	}
 
 	var data *map[string]interface{}
@@ -249,6 +248,6 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[BESPIN-z] getting id...%q\n", d.Id())
 	integrationId := d.Id()
 
-	log.Println("[BESPIN-z] calling UPDATE INTEGTIUEWDF")
+	log.Printf("[BESPIN-z] calling UPDATE INTEGTIUEWDF : description=%q\n", request.Description)
 	return c.client.UpdateIntegration(context.Background(), orgId, projectId, integrationId, request)
 }

@@ -28,6 +28,11 @@ type UpdateSlackIntegrationData struct {
 }
 
 func (c *Client) UpdateIntegration(ctx context.Context, organizationId string, projectId string, integrationId string, updateIntegrationRequest UpdateIntegrationRequest) error {
+	if updateIntegrationRequest.Description == nil {
+		log.Printf("updateIntegrationRequest=nil")
+	} else {
+		log.Printf("updateIntegrationRequest=%q", *updateIntegrationRequest.Description)
+	}
 	requestBody, err := json.Marshal(updateIntegrationRequest)
 	if err != nil {
 		return fmt.Errorf("error marshalling request: %w", err)
