@@ -317,6 +317,61 @@ As well as the input arguments, the following properties are exposed:
 
 - `id` - (`string`) - the ID of the created job. This may change if the job is updated, as doing so will force the job to be recreated.
 
+## Resource `eventstorecloud_integrations`
+
+Creates a new integration resource.
+
+### Example
+
+```hcl
+resource "eventstorecloud_integration" "opsgenie_issues" {
+    project_id = var.project_id
+    description = "create OpsGenie alerts from issues"
+    data = {
+        sink = "opsGenie"
+        api_key = "<secret OpsGenie key here>"
+        source = "issues"
+    }
+}
+
+
+resource "eventstorecloud_integration" "slack_notifications" {
+    project_id = var.project_id
+    description = "send Slack a message when a notification happens"
+    data = {
+        sink = "slack"
+        token = "<secret token here>"        
+        channel_id = "#esc-cluster-notifications"
+        source = "notifications"
+    }
+}
+```
+
+### Arguments
+
+- `description` - (`string`, Required) - a description of the integration
+- `project_id` - (`string`, Required) - the ID of the project to which the integration applies. Only events coming from clusters or other resources under this project will interact with htis integration
+- `data` - (`map`, Required) - Defines the integration, see below
+
+#### Data Properties
+
+- `source` - Common to all integrations. Can be either `issues` or `notifications`. See [here](https://developers.eventstore.com/cloud/integrations/#integration-sources) for information on the types of integration sources
+- `sinks` - Common tall integrations. The type of this value determines the acceptable settings for `source` as well as what other properties are allowed in this field. See [here](https://developers.eventstore.com/cloud/integrations/#integration-sinks) for information on integration sinks
+
+##### OpsGenie Specific Data Fiels
+
+OpsGenie currently only supports the "issues" source. See [here](https://developers.eventstore.com/cloud/integrations/opsgenie.html#how-to-create-an-api-key) for more info on creating OpsGenie integrations.
+
+- `api_key` - A secret key required to integrate with OpsGenie.  *NOTE:* This value is considered private and so is NOT ever returned by the Event Store Cloud API. For that reason it is impossible to display it as a Terraform output value.
+
+##### Slack Specific Data Fiels
+
+Slack currently only supports the "issues" and "notification" sources. See [here](https://developers.eventstore.com/cloud/integrations/slack.html) for more info on creating Slack integrations
+
+- `channel_id` - The channel in Slack that messages will be sent. See [here](https://developers.eventstore.com/cloud/integrations/slack.html) for more info. Can be retrieved as an output value.
+- `token` - A secret token required to integrate with Slack. *NOTE:* This value is considered private and so is NOT ever returned by the Event Store Cloud API. For that reason it is impossible to display it as a Terraform output value.
+
+
 ## Contributing
 
 The Event Store Cloud Terraform provider is released under the Mozilla Public License version 2, like most Terraform
