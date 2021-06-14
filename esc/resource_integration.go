@@ -3,7 +3,6 @@ package esc
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -98,40 +97,29 @@ func translateApiDataToTf(data map[string]interface{}) map[string]interface{} {
 }
 
 func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	log.Println("[BESPIN] in the hood creating up good!")
-
-	log.Printf("[BESPIN-q] resourceIntegrationCreate data=%q\n", d.Get("data"))
-
 	c := meta.(*providerContext)
 
 	projectId := d.Get("project_id").(string)
 
-	log.Println("[BESPIN] 2")
 	request := client.CreateIntegrationRequest{
 		Data:        translateTfDataToApi(d.Get("data").(map[string]interface{})),
 		Description: d.Get("description").(string),
 	}
 
-	log.Println("[BESPIN] 3")
 	resp, err := c.client.CreateIntegration(context.Background(), c.organizationId, projectId, request)
 
-	log.Println("[BESPIN] 4")
 	if err != nil {
-		log.Println("[BESPIN] 5")
 		return err
 	}
 
-	log.Println("[BESPIN] 6")
 	d.SetId(resp.Id)
 
-	log.Println("[BESPIN] 7")
 	return resourceIntegrationRead(d, meta)
 }
 
 func resourceIntegrationExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	c := meta.(*providerContext)
 
-	log.Printf("[BESPIN-q] resourceIntegrationExists data=%q\n", d.Get("data"))
 	projectId := d.Get("project_id").(string)
 	integrationId := d.Id()
 
@@ -149,8 +137,6 @@ func resourceIntegrationExists(d *schema.ResourceData, meta interface{}) (bool, 
 func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(*providerContext)
 
-	log.Printf("[BESPIN-q] resourceIntegrationRead data=%q\n", d.Get("data"))
-
 	projectId := d.Get("project_id").(string)
 	integrationId := d.Id()
 
@@ -164,8 +150,6 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("project_id", resp.Integration.ProjectId); err != nil {
 		return err
 	}
-	log.Printf("[BESPIN-get convert] 1 data=%q\n", resp.Integration.Data)
-	log.Printf("[BESPIN-get convert] 1 data 2=%q\n", translateApiDataToTf(resp.Integration.Data))
 	if err := d.Set("data", translateApiDataToTf(resp.Integration.Data)); err != nil {
 		return err
 	}
@@ -175,8 +159,6 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(*providerContext)
-
-	log.Printf("[BESPIN-q] resourceIntegrationDelete data=%q\n", d.Get("data"))
 
 	projectId := d.Get("project_id").(string)
 	integrationId := d.Id()
@@ -205,17 +187,12 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(*providerContext)
 
-	log.Printf("[BESPIN-q] resourceIntegrationUpdate data=%q\n", d.Get("data"))
-	log.Println("[BESPIN-z] hiiii")
-
 	if !d.HasChanges("description", "data") {
-		log.Println("[BESPIN-z] nopeys!")
 		return nil
 	}
 
 	var desc *string
 	desc = nil
-	log.Printf("[BESPIN-z] ooh I'm digging that new DESCRIPTION!! :%q\n", d.Get("description"))
 	newDesc := d.Get("description").(string)
 	if newDesc != "" {
 		desc = &newDesc
@@ -228,10 +205,9 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 			data = nil
 		case map[string]interface{}:
 			newData := translateTfDataToApi(v)
-			log.Println("[BESPIN-z] ooh I'm digging that new DATA!!!!!!")
 			data = &newData
 		default:
-			log.Println("[BESPIN-z] what is DATA?!!!")
+			return errors.Errorf("error - data was an unexpected type")
 		}
 	} else {
 		data = nil
@@ -243,11 +219,8 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	orgId := c.organizationId
-	log.Printf("[BESPIN-z] getting project...%q\n", d.Get("project_id"))
 	projectId := d.Get("project_id").(string)
-	log.Printf("[BESPIN-z] getting id...%q\n", d.Id())
 	integrationId := d.Id()
 
-	log.Printf("[BESPIN-z] calling UPDATE INTEGTIUEWDF : description=%q\n", request.Description)
 	return c.client.UpdateIntegration(context.Background(), orgId, projectId, integrationId, request)
 }

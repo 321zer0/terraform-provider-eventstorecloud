@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -79,8 +78,6 @@ func (c *Client) GetIntegration(ctx context.Context, organizationId string, proj
 		return nil, err
 	}
 
-	log.Printf("[BESPIN-C] 1 url=%q\n", url.Path)
-
 	resp, err := c.httpClient.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request for GetIntegration: %w", err)
@@ -88,7 +85,6 @@ func (c *Client) GetIntegration(ctx context.Context, organizationId string, proj
 	defer closeIgnoreError(resp.Body)
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		log.Printf("[BESPIN-C] 2 resp.StatusCode=%d\n", resp.StatusCode)
 		return nil, translateStatusCode(resp.StatusCode, "GetIntegration", resp.Body)
 	}
 
