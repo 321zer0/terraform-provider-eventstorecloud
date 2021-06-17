@@ -350,21 +350,21 @@ resource "eventstorecloud_integration" "slack_notifications" {
 ### Arguments
 
 - `description` - (`string`, Required) - a description of the integration
-- `project_id` - (`string`, Required) - the ID of the project to which the integration applies. Only events coming from clusters or other resources under this project will interact with htis integration
+- `project_id` - (`string`, Required) - the ID of the project to which the integration applies. Only events coming from clusters or other resources under this project will interact with this integration
 - `data` - (`map`, Required) - Defines the integration, see below
 
 #### Data Properties
 
 - `source` - Common to all integrations. Can be either `issues` or `notifications`. See [here](https://developers.eventstore.com/cloud/integrations/#integration-sources) for information on the types of integration sources
-- `sinks` - Common tall integrations. The type of this value determines the acceptable settings for `source` as well as what other properties are allowed in this field. See [here](https://developers.eventstore.com/cloud/integrations/#integration-sinks) for information on integration sinks
+- `sinks` - Common to all integrations. The type of this value determines the acceptable settings for `source` as well as what other properties are allowed in this field. See [here](https://developers.eventstore.com/cloud/integrations/#integration-sinks) for information on integration sinks
 
-##### OpsGenie Specific Data Fiels
+##### OpsGenie Specific Data Files
 
 OpsGenie currently only supports the "issues" source. See [here](https://developers.eventstore.com/cloud/integrations/opsgenie.html#how-to-create-an-api-key) for more info on creating OpsGenie integrations.
 
 - `api_key` - A secret key required to integrate with OpsGenie.  *NOTE:* This value is considered private and so is NOT ever returned by the Event Store Cloud API. For that reason it is impossible to display it as a Terraform output value.
 
-##### Slack Specific Data Fiels
+##### Slack Specific Data Files
 
 Slack currently only supports the "issues" and "notification" sources. See [here](https://developers.eventstore.com/cloud/integrations/slack.html) for more info on creating Slack integrations
 
