@@ -267,7 +267,7 @@ resource "eventstorecloud_managed_cluster" "example" {
 - `disk_size` - (`int`, Required) - the size of the data disks in gigabytes. This determines how much data can be
   stored by the cluster. The minimum size is 8GB for a cluster in AWS and 10GB for a cluster in GCP.
 - `disk_type` - (`string`, Required) - the type of data disks, which helps determine the performance profile of the
-  cluster. Check the table below for supperted disk types for each cloud provider.
+  cluster. Check the table below for supported disk types for each cloud provider.
 - `server_version` - (`string`, Required) - the version of Event Store Server with which the cluster is provisioned.
   Currently `20.6` and `20.10` are available.
 - `projection_level` - (`string`, Optional) - the mode in which to enable projections. Valid values are `off`, `system`
