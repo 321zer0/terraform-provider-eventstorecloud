@@ -37,7 +37,7 @@ func resourceManagedCluster() *schema.Resource {
 			"name": {
 				Description: "Name of the managed cluster",
 				Required:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Type:        schema.TypeString,
 			},
 			"topology": {
@@ -221,6 +221,18 @@ func resourceManagedClusterUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	projectId := d.Get("project_id").(string)
 	clusterId := d.Id()
+
+	if d.HasChange("name") {
+		request := &client.ManagedClusterUpdateRequest{
+			OrganizationID: c.organizationId,
+			ProjectID:      projectId,
+			ClusterID:      clusterId,
+			Description: 	d.Get("name").(string),
+		}
+		if err := c.client.ManagedClusterUpdate(ctx, request); err != nil {
+			return err
+		}
+	}
 
 	if d.HasChange("disk_size") {
 		oldI, newI := d.GetChange("disk_size")
