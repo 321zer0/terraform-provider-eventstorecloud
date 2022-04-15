@@ -76,8 +76,11 @@ func modifyMap(args ModifyMapArgs, data map[string]interface{}) map[string]inter
 func translateTfDataToApi(data map[string]interface{}) map[string]interface{} {
 	return modifyMap(ModifyMapArgs{
 		RenameNames: []struct{ from, to string }{
+			{from: "access_key_id", to: "accessKeyId"},
 			{from: "api_key", to: "apiKey"},
 			{from: "channel_id", to: "channelId"},
+			{from: "group_name", to: "groupName"},
+			{from: "secret_access_key", to: "secretAccessKey"},
 		},
 		RemoveNames: []string{},
 	}, data)
@@ -93,9 +96,12 @@ func translateApiDataToTf(data map[string]interface{}) map[string]interface{} {
 	return modifyMap(ModifyMapArgs{
 		RenameNames: []struct{ from, to string }{
 			{from: "channelId", to: "channel_id"},
+			{from: "groupName", to: "group_name"},
 		},
 		RemoveNames: []string{
+			"accessKeyIdDisplay",
 			"apiKeyDisplay",
+			"secretAccessKeyDisplay",
 			"tokenDisplay",
 		},
 	}, data)
