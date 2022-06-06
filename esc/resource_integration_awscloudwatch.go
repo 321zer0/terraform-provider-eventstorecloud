@@ -30,6 +30,7 @@ func resourceIntegrationAwsCloudWatchAwsCloudWatch() *schema.Resource {
 				Description: "AWS IAM access key",
 				Required:    false,
 				ForceNew:    false,
+				Optional:    true,
 				Sensitive:   true,
 				Type:        schema.TypeString,
 			},
@@ -39,7 +40,7 @@ func resourceIntegrationAwsCloudWatchAwsCloudWatch() *schema.Resource {
 				ForceNew:    false,
 				Type:        schema.TypeString,
 			},
-			"group": {
+			"group_name": {
 				Description: "Name of the CloudWatch group",
 				Required:    true,
 				ForceNew:    false,
@@ -62,7 +63,7 @@ func resourceIntegrationAwsCloudWatchAwsCloudWatch() *schema.Resource {
 			"source": {
 				Description: "Name of the CloudWatch group",
 				Required:    true,
-				ForceNew:    false,
+				ForceNew:    true,
 				Sensitive:   false,
 				Type:        schema.TypeString,
 			},
@@ -70,6 +71,7 @@ func resourceIntegrationAwsCloudWatchAwsCloudWatch() *schema.Resource {
 				Description: "AWS IAM secret access key",
 				Required:    false,
 				ForceNew:    false,
+				Optional:    true,
 				Sensitive:   true,
 				Type:        schema.TypeString,
 			},
@@ -103,10 +105,11 @@ func resourceIntegrationAwsCloudWatchCreate(ctx context.Context, d *schema.Resou
 
 	data := map[string]interface{}{
 		"accessKeyId":     accessKeyIdVal.(string),
-		"group":           d.Get("group").(string),
-		"source":          "logs",
+		"groupName":       d.Get("group_name").(string),
 		"region":          d.Get("region").(string),
 		"secretAccessKey": secretAccessKeyVal.(string),
+		"source":          d.Get("source").(string),
+		"sink":            "awsCloudWatch",
 	}
 	request := client.CreateIntegrationRequest{
 		Data:        data,
@@ -144,9 +147,9 @@ func resourceIntegrationAwsCloudWatchRead(ctx context.Context, d *schema.Resourc
 		diags = append(diags, diag.FromErr(err)...)
 	}
 
-	setVal := func(dataKey string) {
+	setVal := func(tfName, dataKey string) {
 		if val, ok := resp.Integration.Data[dataKey]; ok {
-			if err := d.Set(dataKey, val); err != nil {
+			if err := d.Set(tfName, val); err != nil {
 				diags = append(diags, diag.FromErr(err)...)
 			}
 		} else {
@@ -156,9 +159,9 @@ func resourceIntegrationAwsCloudWatchRead(ctx context.Context, d *schema.Resourc
 			})
 		}
 	}
-	setVal("group")
-	setVal("region")
-	setVal("source")
+	setVal("group_name", "groupName")
+	setVal("region", "region")
+	setVal("source", "source")
 
 	return diags
 }
@@ -195,7 +198,7 @@ func resourceIntegrationAwsCloudWatchDelete(ctx context.Context, d *schema.Resou
 func resourceIntegrationAwsCloudWatchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	c := meta.(*providerContext)
 
-	if !d.HasChanges("description", "group", "region", "access_key_id", "secret_access_key") {
+	if !d.HasChanges("description", "group_name", "region", "access_key_id", "secret_access_key") {
 		return resourceIntegrationAwsCloudWatchRead(ctx, d, meta)
 	}
 
@@ -207,15 +210,22 @@ func resourceIntegrationAwsCloudWatchUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	data := map[string]interface{}{
-		"group":  d.Get("group").(string),
-		"source": "logs",
-		"region": d.Get("region").(string),
+		"groupName": d.Get("group_name").(string),
+		"source":    d.Get("source").(string),
+		"sink":      "awsCloudWatch",
+		"region":    d.Get("region").(string),
 	}
 	if d.HasChange("access_key_id") {
-		data["accessKeyId"] = d.Get("access_key_id").(string)
+		newVal := d.Get("access_key_id").(string)
+		if newVal != "" {
+			data["accessKeyId"] = newVal
+		}
 	}
 	if d.HasChange("secret_access_key") {
-		data["secretAccessKey"] = d.Get("secret_access_key").(string)
+		newVal := d.Get("secret_access_key").(string)
+		if newVal != "" {
+			data["secretAccessKey"] = newVal
+		}
 	}
 
 	request := client.UpdateIntegrationRequest{
