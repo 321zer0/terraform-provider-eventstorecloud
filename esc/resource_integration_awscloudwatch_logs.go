@@ -11,15 +11,15 @@ import (
 	"github.com/EventStore/terraform-provider-eventstorecloud/client"
 )
 
-func resourceIntegrationAwsCloudWatchAwsCloudWatch() *schema.Resource {
+func resourceIntegrationAwsCloudWatchLogs() *schema.Resource {
 
 	return &schema.Resource{
-		CreateContext: resourceIntegrationAwsCloudWatchCreate,
-		ReadContext:   resourceIntegrationAwsCloudWatchRead,
-		DeleteContext: resourceIntegrationAwsCloudWatchDelete,
-		UpdateContext: resourceIntegrationAwsCloudWatchUpdate,
+		CreateContext: resourceIntegrationAwsCloudWatchLogsCreate,
+		ReadContext:   resourceIntegrationAwsCloudWatchLogsRead,
+		DeleteContext: resourceIntegrationAwsCloudWatchLogsDelete,
+		UpdateContext: resourceIntegrationAwsCloudWatchLogsUpdate,
 
-		Description: "Manages an integration for type AwsCloudWatch",
+		Description: "Manages integrations of sink AwsCloudWatch with logs as their source",
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceImport,
@@ -60,13 +60,6 @@ func resourceIntegrationAwsCloudWatchAwsCloudWatch() *schema.Resource {
 				Sensitive:   false,
 				Type:        schema.TypeString,
 			},
-			"source": {
-				Description: "Name of the CloudWatch group",
-				Required:    true,
-				ForceNew:    true,
-				Sensitive:   false,
-				Type:        schema.TypeString,
-			},
 			"secret_access_key": {
 				Description: "AWS IAM secret access key",
 				Required:    false,
@@ -79,22 +72,21 @@ func resourceIntegrationAwsCloudWatchAwsCloudWatch() *schema.Resource {
 	}
 }
 
-func resourceIntegrationAwsCloudWatchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationAwsCloudWatchLogsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	c := meta.(*providerContext)
 
 	projectId := d.Get("project_id").(string)
-
-	accessKeyIdVal := d.Get("access_key_id")
-	secretAccessKeyVal := d.Get("secret_access_key")
-	if accessKeyIdVal == nil || secretAccessKeyVal == nil {
+	accessKeyId := d.Get("access_key_id").(string)
+	secretAccessKey := d.Get("secret_access_key").(string)
+	if accessKeyId == "" || secretAccessKey == "" {
 		var diags diag.Diagnostics
-		if accessKeyIdVal == nil {
+		if accessKeyId == "" {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Missing access_key_id.",
 			})
 		}
-		if secretAccessKeyVal == nil {
+		if secretAccessKey == "" {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Missing secret_access_key.",
@@ -104,11 +96,11 @@ func resourceIntegrationAwsCloudWatchCreate(ctx context.Context, d *schema.Resou
 	}
 
 	data := map[string]interface{}{
-		"accessKeyId":     accessKeyIdVal.(string),
+		"accessKeyId":     accessKeyId,
 		"groupName":       d.Get("group_name").(string),
 		"region":          d.Get("region").(string),
-		"secretAccessKey": secretAccessKeyVal.(string),
-		"source":          d.Get("source").(string),
+		"secretAccessKey": secretAccessKey,
+		"source":          "logs",
 		"sink":            "awsCloudWatch",
 	}
 	request := client.CreateIntegrationRequest{
@@ -123,10 +115,10 @@ func resourceIntegrationAwsCloudWatchCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(resp.Id)
 
-	return resourceIntegrationAwsCloudWatchRead(ctx, d, meta)
+	return resourceIntegrationAwsCloudWatchLogsRead(ctx, d, meta)
 }
 
-func resourceIntegrationAwsCloudWatchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationAwsCloudWatchLogsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	c := meta.(*providerContext)
 
 	var diags diag.Diagnostics
@@ -161,12 +153,11 @@ func resourceIntegrationAwsCloudWatchRead(ctx context.Context, d *schema.Resourc
 	}
 	setVal("group_name", "groupName")
 	setVal("region", "region")
-	setVal("source", "source")
 
 	return diags
 }
 
-func resourceIntegrationAwsCloudWatchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationAwsCloudWatchLogsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	c := meta.(*providerContext)
 
 	var diags diag.Diagnostics
@@ -195,11 +186,11 @@ func resourceIntegrationAwsCloudWatchDelete(ctx context.Context, d *schema.Resou
 	}
 }
 
-func resourceIntegrationAwsCloudWatchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationAwsCloudWatchLogsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	c := meta.(*providerContext)
 
 	if !d.HasChanges("description", "group_name", "region", "access_key_id", "secret_access_key") {
-		return resourceIntegrationAwsCloudWatchRead(ctx, d, meta)
+		return resourceIntegrationAwsCloudWatchLogsRead(ctx, d, meta)
 	}
 
 	var desc *string
@@ -211,7 +202,7 @@ func resourceIntegrationAwsCloudWatchUpdate(ctx context.Context, d *schema.Resou
 
 	data := map[string]interface{}{
 		"groupName": d.Get("group_name").(string),
-		"source":    d.Get("source").(string),
+		"source":    "logs",
 		"sink":      "awsCloudWatch",
 		"region":    d.Get("region").(string),
 	}
@@ -241,5 +232,5 @@ func resourceIntegrationAwsCloudWatchUpdate(ctx context.Context, d *schema.Resou
 		return err
 	}
 
-	return resourceIntegrationAwsCloudWatchRead(ctx, d, meta)
+	return resourceIntegrationAwsCloudWatchLogsRead(ctx, d, meta)
 }
