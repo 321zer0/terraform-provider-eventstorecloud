@@ -101,7 +101,7 @@ func resourceIntegrationAwsCloudWatchLogsCreate(ctx context.Context, d *schema.R
 		"region":          d.Get("region").(string),
 		"secretAccessKey": secretAccessKey,
 		"source":          "logs",
-		"sink":            "awsCloudWatch",
+		"sink":            "awsCloudWatchLogs",
 	}
 	request := client.CreateIntegrationRequest{
 		Data:        data,
@@ -203,7 +203,7 @@ func resourceIntegrationAwsCloudWatchLogsUpdate(ctx context.Context, d *schema.R
 	data := map[string]interface{}{
 		"groupName": d.Get("group_name").(string),
 		"source":    "logs",
-		"sink":      "awsCloudWatch",
+		"sink":      "awsCloudWatchLogs",
 		"region":    d.Get("region").(string),
 	}
 	if d.HasChange("access_key_id") {
