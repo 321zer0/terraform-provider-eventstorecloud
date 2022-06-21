@@ -79,13 +79,14 @@ func New(version string) func() *schema.Provider {
 			},
 
 			ResourcesMap: map[string]*schema.Resource{
-				"eventstorecloud_project":                        resourceProject(),
-				"eventstorecloud_network":                        resourceNetwork(),
-				"eventstorecloud_peering":                        resourcePeering(),
-				"eventstorecloud_managed_cluster":                resourceManagedCluster(),
-				"eventstorecloud_scheduled_backup":               resourceScheduledBackup(),
-				"eventstorecloud_integration":                    resourceIntegration(),
-				"eventstorecloud_integration_awscloudwatch_logs": resourceIntegrationAwsCloudWatchLogs(),
+				"eventstorecloud_project":                           resourceProject(),
+				"eventstorecloud_network":                           resourceNetwork(),
+				"eventstorecloud_peering":                           resourcePeering(),
+				"eventstorecloud_managed_cluster":                   resourceManagedCluster(),
+				"eventstorecloud_scheduled_backup":                  resourceScheduledBackup(),
+				"eventstorecloud_integration":                       resourceIntegration(),
+				"eventstorecloud_integration_awscloudwatch_logs":    resourceIntegrationAwsCloudWatchLogs(),
+				"eventstorecloud_integration_awscloudwatch_metrics": resourceIntegrationAwsCloudWatchMetrics(),
 			},
 		}
 
