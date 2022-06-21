@@ -34,6 +34,13 @@ func resourceIntegrationAwsCloudWatchLogs() *schema.Resource {
 				Sensitive:   true,
 				Type:        schema.TypeString,
 			},
+			"cluster_ids": {
+				Description: "Clusters to be used with this integration",
+				Required:    true,
+				ForceNew:    false,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"description": {
 				Description: "Human readable description of the integration",
 				Required:    true,
@@ -72,6 +79,15 @@ func resourceIntegrationAwsCloudWatchLogs() *schema.Resource {
 	}
 }
 
+func interfaceToStringList(value interface{}) []string {
+	list := value.([]interface{})
+	result := []string{}
+	for _, element := range list {
+		result = append(result, element.(string))
+	}
+	return result
+}
+
 func resourceIntegrationAwsCloudWatchLogsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	c := meta.(*providerContext)
 
@@ -97,6 +113,7 @@ func resourceIntegrationAwsCloudWatchLogsCreate(ctx context.Context, d *schema.R
 
 	data := map[string]interface{}{
 		"accessKeyId":     accessKeyId,
+		"clusterIds":      interfaceToStringList(d.Get("cluster_ids")),
 		"groupName":       d.Get("group_name").(string),
 		"region":          d.Get("region").(string),
 		"secretAccessKey": secretAccessKey,
@@ -151,6 +168,7 @@ func resourceIntegrationAwsCloudWatchLogsRead(ctx context.Context, d *schema.Res
 			})
 		}
 	}
+	setVal("cluster_ids", "clusterIds")
 	setVal("group_name", "groupName")
 	setVal("region", "region")
 
@@ -201,10 +219,11 @@ func resourceIntegrationAwsCloudWatchLogsUpdate(ctx context.Context, d *schema.R
 	}
 
 	data := map[string]interface{}{
-		"groupName": d.Get("group_name").(string),
-		"source":    "logs",
-		"sink":      "awsCloudWatchLogs",
-		"region":    d.Get("region").(string),
+		"clusterIds": d.Get("cluster_ids").(string),
+		"groupName":  d.Get("group_name").(string),
+		"source":     "logs",
+		"sink":       "awsCloudWatchLogs",
+		"region":     d.Get("region").(string),
 	}
 	if d.HasChange("access_key_id") {
 		newVal := d.Get("access_key_id").(string)
