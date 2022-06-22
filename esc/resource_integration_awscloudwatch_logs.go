@@ -207,7 +207,7 @@ func resourceIntegrationAwsCloudWatchLogsDelete(ctx context.Context, d *schema.R
 func resourceIntegrationAwsCloudWatchLogsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	c := meta.(*providerContext)
 
-	if !d.HasChanges("description", "group_name", "region", "access_key_id", "secret_access_key") {
+	if !d.HasChanges("cluster_ids", "description", "group_name", "region", "access_key_id", "secret_access_key") {
 		return resourceIntegrationAwsCloudWatchLogsRead(ctx, d, meta)
 	}
 
@@ -219,7 +219,7 @@ func resourceIntegrationAwsCloudWatchLogsUpdate(ctx context.Context, d *schema.R
 	}
 
 	data := map[string]interface{}{
-		"clusterIds": d.Get("cluster_ids").(string),
+		"clusterIds": interfaceToStringList(d.Get("cluster_ids")),
 		"groupName":  d.Get("group_name").(string),
 		"source":     "logs",
 		"sink":       "awsCloudWatchLogs",

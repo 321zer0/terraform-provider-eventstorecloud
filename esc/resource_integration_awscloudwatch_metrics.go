@@ -198,7 +198,7 @@ func resourceIntegrationAwsCloudWatchMetricsDelete(ctx context.Context, d *schem
 func resourceIntegrationAwsCloudWatchMetricsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	c := meta.(*providerContext)
 
-	if !d.HasChanges("description", "namespace", "region", "access_key_id", "secret_access_key") {
+	if !d.HasChanges("cluster_ids", "description", "namespace", "region", "access_key_id", "secret_access_key") {
 		return resourceIntegrationAwsCloudWatchMetricsRead(ctx, d, meta)
 	}
 
@@ -210,7 +210,7 @@ func resourceIntegrationAwsCloudWatchMetricsUpdate(ctx context.Context, d *schem
 	}
 
 	data := map[string]interface{}{
-		"clusterIds": d.Get("cluster_ids").(string),
+		"clusterIds": interfaceToStringList(d.Get("cluster_ids")),
 		"namespace":  d.Get("namespace").(string),
 		"source":     "metrics",
 		"sink":       "awsCloudWatchMetrics",
