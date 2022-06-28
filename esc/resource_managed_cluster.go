@@ -73,7 +73,7 @@ func resourceManagedCluster() *schema.Resource {
 			"disk_type": {
 				Description:  "Storage class of the data disks (find the list of valid values below)",
 				Required:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				Type:         schema.TypeString,
 				ValidateFunc: ValidateWithByPass(validation.StringInSlice(validDiskTypes, true)),
 				StateFunc: func(val interface{}) string {
