@@ -258,10 +258,10 @@ func resourceManagedClusterUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if d.HasChange("disk_size") {
+	if d.HasChange("disk_size") || d.HasChange("disk_type") || d.HasChange("disk_iops") || d.HasChange("disk_throughput") {
 		oldI, newI := d.GetChange("disk_size")
 		oldSize, newSize := oldI.(int), newI.(int)
-		if newSize <= oldSize {
+		if newSize < oldSize {
 			return diag.FromErr(fmt.Errorf("Disks cannot be made smaller - must be %dGB or larger.", oldSize))
 		}
 
@@ -269,7 +269,9 @@ func resourceManagedClusterUpdate(ctx context.Context, d *schema.ResourceData, m
 			OrganizationID: c.organizationId,
 			ProjectID:      projectId,
 			ClusterID:      clusterId,
+			DiskIops:       int32(d.Get("disk_iops").(int)),
 			DiskSizeGB:     int32(newSize),
+			DiskThroughput: int32(d.Get("disk_throughput").(int)),
 			DiskType:       d.Get("disk_type").(string),
 		}
 		if err := c.client.ManagedClusterExpandDisk(ctx, request); err != nil {
